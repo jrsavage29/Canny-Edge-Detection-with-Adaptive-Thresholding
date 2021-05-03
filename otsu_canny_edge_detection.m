@@ -90,8 +90,7 @@ function [g] = otsu_canny_edge(f, thrL, thrH, pos)
         %subplotting. thrL and thrH are used if using the double
         %thresholding piece of code instead of the otsu method section of
         %code.
-    g = 0;
-   
+ 
     %get the horizontal and vertical gradients of the image
     %Sobel kernels have better noise-suppression (smoothing) characteristics makes them preferable
     %because noise suppression is an important issue when dealing with
@@ -132,21 +131,36 @@ function [g] = otsu_canny_edge(f, thrL, thrH, pos)
     % following angles: 0, 45, 90, or 135. The angles are rounded to within
     % 22.5 degrees, in the forward and reverse directions. 
     [rows, cols] = size(f);
-    approx_g_direction = zeros(rows, cols);
-    for row = 1:rows
-        for col = 1:cols
-
+    local_max = zeros(rows,cols);
+    for row = 2:rows-1
+        for col = 2:cols-1
             if((g_direction(row,col) > -22.5 && g_direction(row,col) < 22.5) || (g_direction(row,col) > 157.5 && g_direction(row,col) < -157.5))
-                approx_g_direction(row,col) = 0;
+                if(g_mag(row,col) > g_mag(row, col+1) && g_mag(row,col) > g_mag(row, col-1))
+                    local_max(row,col)=g_mag(row,col);
+                else
+                    local_max(row,col)=0;
+                end
             end
             if((g_direction(row,col) > 22.5 && g_direction(row,col) < 67.5) || (g_direction(row,col) > -157.5 && g_direction(row,col) < -112.5))
-                approx_g_direction(row,col) = 45;
+                if(g_mag(row,col) > g_mag(row+1, col+1) && g_mag(row,col) > g_mag(row-1, col-1))
+                    local_max(row,col)=g_mag(row,col);
+                else
+                    local_max(row,col)=0;
+                end
             end
             if((g_direction(row,col) > 67.5 && g_direction(row,col) < 112.5) || (g_direction(row,col) > -112.5 && g_direction(row,col) < -67.5))
-                approx_g_direction(row,col) = 90;
+                if(g_mag(row,col) > g_mag(row+1, col) && g_mag(row,col) > g_mag(row-1, col))
+                    local_max(row,col)=g_mag(row,col);
+                else
+                    local_max(row,col)=0;
+                end
             end
             if((g_direction(row,col) > 112.5 && g_direction(row,col) < 157.5) || (g_direction(row,col) > -67.5 && g_direction(row,col) < -22.5))
-                approx_g_direction(row,col) = 135;
+                if(g_mag(row,col) > g_mag(row-1, col+1) && g_mag(row,col) > g_mag(row+1, col-1))
+                    local_max(row,col)=g_mag(row,col);
+                else
+                    local_max(row,col)=0;
+                end
             end
         end
     end
@@ -159,42 +173,8 @@ function [g] = otsu_canny_edge(f, thrL, thrH, pos)
     % to the neighbors along a normal to the gradient direction. If the
     % gradient magnitude is greater than both the neighbors, it is retained.
     % Otherwise, if the gradient magnitude of the pixel is set to zero. 
-    local_max = zeros(rows,cols);
-    for row = 2:rows-1
-        for col = 2:cols-1
 
-            if approx_g_direction(row,col) == 0
-                if(g_mag(row,col) > g_mag(row, col+1) && g_mag(row,col) > g_mag(row, col-1))
-                    local_max(row,col)=g_mag(row,col);
-                else
-                    local_max(row,col)=0;
-                end
-                
-            elseif approx_g_direction(row,col) == 45
-                if(g_mag(row,col) > g_mag(row+1, col+1) && g_mag(row,col) > g_mag(row-1, col-1))
-                    local_max(row,col)=g_mag(row,col);
-                else
-                    local_max(row,col)=0;
-                end
-
-            elseif approx_g_direction(row,col) == 90
-                if(g_mag(row,col) > g_mag(row, col+1) && g_mag(row,col) > g_mag(row, col-1))
-                    local_max(row,col)=g_mag(row,col);
-                else
-                    local_max(row,col)=0;
-                end
-
-            elseif approx_g_direction(row,col) == 135
-                if(g_mag(row,col) > g_mag(row-1, col+1) && g_mag(row,col) > g_mag(row+1, col-1))
-                    local_max(row,col)=g_mag(row,col);
-                else
-                    local_max(row,col)=0;
-                end
-
-            end 
-        end
-    end
-    
+   
     figure(5)
     subplot(1,3,pos)
     imshow(local_max)
@@ -235,7 +215,6 @@ function [g] = otsu_thresholding(f)
         %thresholds based on the calculations obtatined using the histogram
         %of the image.
     [rows, cols] = size(f);
-    g = f;
     n=imhist(f); % Compute the histogram
     N=sum(n); % sum up all the histogram values
     max=0; %initialize maximum 
