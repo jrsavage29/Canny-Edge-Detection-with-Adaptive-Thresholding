@@ -1,4 +1,4 @@
-%My Implementation of the Canny Edge Detection w/ Adaptive
+%Our Implementation of the Canny Edge Detection w/ Adaptive
 %Thresholding Technique via Otsu's Thresholding Method.
 clear;
 clc;
@@ -204,8 +204,6 @@ function [g] = otsu_canny_edge(f, thrL, thrH, pos)
     local_max = im2uint8(local_max);
     g = otsu_thresholding(local_max);
     
-
-
 end
 
 %% The otsu method for addaptive thresholding
@@ -253,4 +251,4 @@ function [g] = otsu_thresholding(f)
 end
 
 
-%Jamahl Savage 2021
+%Jamahl Savage and Kevin Kleinegger 2021
