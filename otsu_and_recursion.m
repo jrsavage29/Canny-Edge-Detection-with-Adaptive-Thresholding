@@ -1,13 +1,13 @@
-%Our Implementation of the Canny Edge Detection w/ Adaptive
-%Thresholding Technique via Otsu's Thresholding Method.
+%This file contains the otsu canny edge detector as well as the recursive process 
 clear;
 clc;
 %% read in image and apply guassian blur
 img = im2double(imread('cameraman.tif'));
 
-output1 = recursiveCanny(img, 32, 2);
-output2 = recursiveCanny(img, 32, 8);
-output3 = recursiveCanny(img, 32, 16);
+%recursive results using MATLAB's edge function
+output1 = recursiveCanny(img, 128, 2);
+output2 = recursiveCanny(img, 128, 8);
+output3 = recursiveCanny(img, 128, 16);
 
 figure(1)
 sgtitle('Recursive Results')
@@ -23,6 +23,7 @@ subplot(1,3,3)
 imshow(output3)
 title('sigma = 16')
 
+%recursive results using our otsu canny function
 output1_2 = recursiveCanny2(img, 128, 2);
 output2_2 = recursiveCanny2(img, 128, 8);
 output3_2 = recursiveCanny2(img, 128, 16);
@@ -41,15 +42,15 @@ subplot(1,3,3)
 imshow(output3_2)
 title('sigma = 16')
 
+%blur images
 gauss1 = imgaussfilt(img, 2);
 gauss2 = imgaussfilt(img, 8);
 gauss3 = imgaussfilt(img, 16);
 
-r1 = otsu_canny_edge(gauss1,0.01, 0.05, 1);
-
-r2 = otsu_canny_edge(gauss2,0.01, 0.05, 2);
-
-r3 = otsu_canny_edge(gauss3,0.01, 0.05, 3);
+%get results from our otsu canny edge detector
+r1 = otsu_canny_edge(gauss1);
+r2 = otsu_canny_edge(gauss2);
+r3 = otsu_canny_edge(gauss3);
 
 figure(3)
 sgtitle('Thresholded Results')
@@ -65,6 +66,7 @@ subplot(1,3,3)
 imshow(r3)
 title('sigma = 16')
 
+%MATLAB's function results
 canny1 = edge(gauss1, 'canny');
 canny2 = edge(gauss2, 'canny');
 canny3 = edge(gauss3, 'canny');
@@ -85,13 +87,19 @@ imshow(canny3)
 title('sigma = 16')
 
 
+%function for recursive canny, uses the MATLAB edge function to do canny
 function output = recursiveCanny(img, baseCase, blur)
+    %divide the image into 4 regions
     [region1, region2, region3, region4] = divideImage(img);    
     imgSize = size(img);
+    %create our new outputs
     r1 = zeros(size(region1, 1), size(region1, 2));
     r2 = zeros(size(region2, 1), size(region2, 2));
     r3 = zeros(size(region3, 1), size(region3, 2));
     r4 = zeros(size(region4, 1), size(region4, 2));
+    %for every region we created we check the size and if it is less than
+    %or equal to the base case we filter the image and take the canny, if
+    %not we simply call the recursive function again on the region
     for i = 1:4
         if(i == 1)
             if(size(region1, 1) <= baseCase)
@@ -123,6 +131,7 @@ function output = recursiveCanny(img, baseCase, blur)
             end
         end          
     end 
+    %join together our new regions for our ourput
     newSize = size(img, 1)/2;
     output = zeros(size(img, 1), size(img, 2));
     output(1:newSize, 1:newSize) = r1;
@@ -132,6 +141,8 @@ function output = recursiveCanny(img, baseCase, blur)
     
 end
 
+%second recursive function, is identical to the above function but instead
+%uses our canny edge detector function.
 function output = recursiveCanny2(img, baseCase, blur)
     [region1, region2, region3, region4] = divideImage(img);    
     imgSize = size(img);
@@ -179,6 +190,8 @@ function output = recursiveCanny2(img, baseCase, blur)
     
 end
 
+%separate function to divide an image into 4 quadrants, used in the
+%recursive functions
 function [r1, r2, r3, r4] = divideImage(img)
     imgSize = size(img);
     newSize = imgSize(1)/2;
